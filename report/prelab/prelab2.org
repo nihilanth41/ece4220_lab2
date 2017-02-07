@@ -1,0 +1,69 @@
+#+AUTHOR: Zachary Rump
+#+DATE: 2017-02-06
+#+TITLE: ECE 4220
+#+OPTIONS: toc:nil H:4 num:0 ^:nil
+#+LATEX_HEADER: \usepackage[margin=0.5in]{geometry}
+\overfullrule=2cm
+* Prelab 2
+** Week 1 
+List and describe the functions to: create, exit and join a pthread. 
+Include information like the function name, arguments and return values.
+*** POSIX Threads
+**** pthread_create()
+#+BEGIN_SRC 
+pthread_create(pthread_t *thread, const pthread_attr_t *attr, void
+*(*start_routine) (void *), void *arg);
+#+END_SRC
+***** Description
+****** Starts new thread in the calling process.
+***** Parameters
+****** thread 
+******* Pointer to pthread_t to contain the new thread.
+****** attr
+******* Pointer to a pthread_attr_t that contains attributes for the new thread.
+******** initialized using pthread_attr_init()
+******** NULL == attr => specifies default attributes.
+****** start routine
+******* Pointer to a function to run in the new thread.
+****** arg:
+******* Void pointer to arguments. 
+******** The pointer arg is the sole argument passed to start_routine().
+***** Return Value
+****** Success
+******* Returns 0;
+****** Error
+******* Returns an error number and the contents of *thread are undefined.
+**** pthread_exit()
+#+BEGIN_SRC 
+void pthread_exit(void *retval);
+#+END_SRC
+***** Description
+****** Terminates the calling thread.
+***** Parameters
+****** retval
+******* A (void *) value that can be potentially be made available to another thread in the same process
+******** If the thread calls pthread_join();
+***** Return Value
+****** void
+**** pthread_join()
+#+BEGIN_SRC
+int pthread_join(pthread_t thread, void **retval);
+#+END_SRC
+***** Description
+****** Join with a terminated thread.
+***** Parameters
+****** thread
+******* pthread_join waits for this thread to terminate
+******** Upon termination copies the exit status of the target thread
+****** retval
+******* Double pointer that specifies where to copy the retval of the target thread.
+***** Return Value
+****** Success
+******* returns 0;
+****** Error
+******* Returns an error number.
+**** References
+***** [[http://man7.org/linux/man-pages/man3/pthread_create.3.html]]
+***** [[http://man7.org/linux/man-pages/man3/pthread_exit.3.html]]
+***** [[http://man7.org/linux/man-pages/man3/pthread_join.3.html]]
+      
