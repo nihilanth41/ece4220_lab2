@@ -1,9 +1,9 @@
 CC=gcc
-CFLAGS=#-Wall
+CFLAGS=-Wall -Werror -Wmissing-prototypes
 
 ODIR=obj
 
-LIBS =-lpthread
+LDLIBS =-lpthread
 
 _OBJ = lab2.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
@@ -12,7 +12,7 @@ $(ODIR)/%.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 lab2: $(OBJ)
-	$(CC) -o $@.bin $^ $(CFLAGS)
+	$(CC) -o $@.bin $^ $(CFLAGS) $(LDLIBS)
 
 .PHONY: clean
 
