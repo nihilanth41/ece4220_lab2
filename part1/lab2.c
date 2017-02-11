@@ -9,68 +9,112 @@
 typedef struct matrix_t {
   int matrix_a[BUF_SIZE][BUF_SIZE];
   int matrix_b[BUF_SIZE][BUF_SIZE];
-  int matrix_add[BUF_SIZE][BUF_SIZE];
-  int matrix_mul[BUF_SIZE][BUF_SIZE];
+  int matrix_c[BUF_SIZE][BUF_SIZE];
   int a_rows, a_columns;
   int b_rows, b_columns;
-  int mul_rows, mul_columns;
-  int add_rows, add_columns;
+  int c_rows, c_columns;
 } matrix_t;
 
 // prototypes
 void validate_input(int argc, char **argv);
 int open_input_file(char *filename, matrix_t *);
 void matrix_multiply_single(void *);
-
-
+void matrix_add_single(void *);
 
 int main(int argc, char **argv) {
 
   validate_input(argc, argv);
 
-  matrix_t mtx;
-  int ret = open_input_file(argv[1], &mtx);
+  matrix_t mtx_add, mtx_mul;
+  int ret = open_input_file(argv[1], &mtx_add);
   if(ret < 0)
     {
-      printf("Error opening input file\n");
+      printf("Error opening input file: %s\n", argv[1]);
+      return -1;
+    }
+  ret = open_input_file(argv[2], &mtx_mul);
+  if(ret < 0)
+    {
+      printf("Error opening input file: %s\n", argv[1]);
       return -1;
     }
   // Check matrix dimensons
-  // Multiplication first
-  if(mtx.a_columns != mtx.b_rows)
+  if( (mtx_add.a_columns != mtx_add.b_columns) || (mtx_add.a_rows != mtx_add.b_rows) )
+    {
+      printf("Invalid dimensions for addition\n");
+      return -1;
+    }
+  if(mtx_mul.a_columns != mtx_mul.b_rows)
     {
       printf("Invalid dimensions for multiplication\n");
       return -1;
     }
-  // Get start time
+
+  
   // Create threads (do computation)
+
   // Single thread for entire output
   pthread_t thread_s;
-  pthread_create(&thread_s, NULL, (void *)&matrix_multiply_single, (void *)&mtx);
-
+  // Addition
+  // Get start time
+  pthread_create(&thread_s, NULL, (void *)&matrix_add_single, (void *)&mtx_add);
   // Wait for thread to finish
   pthread_join(thread_s, NULL);
+  // Get end time
 
+  // Multiplication
+  // Get start time
+  pthread_create(&thread_s, NULL, (void *)&matrix_multiply_single, (void *)&mtx_mul);
+  // Wait for thread to finish
+  pthread_join(thread_s, NULL);
   // Get end time
 
   // print result matrix
-
   int i,j;
-  // Row
-  for(i=1; i<=mtx.mul_rows; i++)
+  for(i=1; i<=mtx_add.c_rows; i++)
     {
       // Column
-      for(j=1; j<=mtx.mul_columns; j++)
+      for(j=1; j<=mtx_add.c_columns; j++)
 	{
-	  printf("%d ", mtx.matrix_mul[i][j]);
+	  printf("%d ", mtx_add.matrix_c[i][j]);
 	}
       printf("\n");
     }
-
+  // Row
+  for(i=1; i<=mtx_mul.c_rows; i++)
+    {
+      // Column
+      for(j=1; j<=mtx_mul.c_columns; j++)
+	{
+	  printf("%d ", mtx_mul.matrix_c[i][j]);
+	}
+      printf("\n");
+    }
   // print time elapsed
 
 
   return 0;
+}
+
+void matrix_add_single(void *m) {
+  if(NULL == m)
+    {
+      exit(-1);
+    }
+  matrix_t *mtx = (matrix_t *)m;
+  mtx->c_rows = mtx->a_rows;
+  mtx->c_columns = mtx->a_columns;
+  int i,j;
+  // For each row
+  for(i=1; i<=mtx->c_rows; i++)
+    {
+      // For each column
+      for(j=1; j<=mtx->c_columns; j++)
+	{
+	  mtx->matrix_c[i][j] = mtx->matrix_a[i][j] + mtx->matrix_b[i][j];
+	}
+    }
+  pthread_exit(0);
 }
 
 void matrix_multiply_single(void *m) {
@@ -79,8 +123,8 @@ void matrix_multiply_single(void *m) {
 	exit(-1);
     }
     matrix_t *mtx = (matrix_t *)m;
-    mtx->mul_rows = mtx->a_rows;
-    mtx->mul_columns = mtx->b_columns;
+    mtx->c_rows = mtx->a_rows;
+    mtx->c_columns = mtx->b_columns;
     int i,k,l;
     int sum_tmp=0;
     // For each row in Matrix A
@@ -94,7 +138,7 @@ void matrix_multiply_single(void *m) {
 	      {
 		sum_tmp +=  ( (mtx->matrix_a[i][k]) * (mtx->matrix_b[k][l]) );
 	      }
-	    mtx->matrix_mul[i][l] = sum_tmp;
+	    mtx->matrix_c[i][l] = sum_tmp;
 	    sum_tmp = 0;
 	  }
       }
@@ -104,9 +148,9 @@ void matrix_multiply_single(void *m) {
 
 void validate_input(int argc, char **argv) {
   // Get filename arg
-  if(argc < 2)
+  if(argc < 3)
     {
-      printf("Usage is: %s </path/to/matrix.txt>\n", argv[0]);
+      printf("Usage is: %s </path/to/add.txt> </path/to/mul.txt\n", argv[0]);
       exit(-1);
     }
   FILE *fp_r = fopen(argv[1], "r");
@@ -115,6 +159,14 @@ void validate_input(int argc, char **argv) {
       printf("Error opening file: %s\n", argv[1]);
       exit(-1);
     }
+  else {
+    fp_r = fopen(argv[2], "r");
+    if(NULL == fp_r) 
+      {
+	printf("Error opening file: %s\n", argv[2]);
+	exit(-1);
+      }
+  }
 }
 
 int open_input_file(char *filename, matrix_t *m) {
