@@ -3,40 +3,79 @@
 #include <string.h>
 #include <pthread.h>
 
-#define BUF_SIZE 128
+#define SIZE_MAX 64 
 
+pthread_mutex_t lock;
+pthread_t threads[SIZE_MAX];
 
 typedef struct matrix_t {
-  int matrix_a[BUF_SIZE][BUF_SIZE];
-  int matrix_b[BUF_SIZE][BUF_SIZE];
-  int matrix_c[BUF_SIZE][BUF_SIZE];
+  int matrix_a[SIZE_MAX][SIZE_MAX];
+  int matrix_b[SIZE_MAX][SIZE_MAX];
+  int matrix_c[SIZE_MAX][SIZE_MAX];
   int a_rows, a_columns;
   int b_rows, b_columns;
   int c_rows, c_columns;
 } matrix_t;
+
+typedef struct matrix_rows_t {
+  matrix_t *mtx;
+  int current_row;
+} matrix_rows_t;
 
 // prototypes
 void validate_input(int argc, char **argv);
 int open_input_file(char *filename, matrix_t *);
 void matrix_multiply_single(void *);
 void matrix_add_single(void *);
+void matrix_add_rows(void *);
+void matrix_add_rows_wrapper(matrix_rows_t *);
 
+void matrix_add_rows(void *m) {
+  matrix_rows_t *matrix_rows = (matrix_rows_t *)m;
+  matrix_t *mtx = matrix_rows->mtx;
+  int i = matrix_rows->current_row;
+  int j;
+  for(j=1; j<=mtx->a_columns; j++)
+    {
+      mtx->matrix_c[i][j] = mtx->matrix_a[i][j] + mtx->matrix_b[i][j];
+    }
+}
+
+void matrix_add_rows_wrapper(matrix_rows_t *m) {
+  // For each row of the output matrix, spin up a new thread to do the work
+  int i;
+  for(i=0; i<m->mtx->a_rows; i++)
+    {
+      m->current_row = i+1;
+      pthread_create(&threads[i], NULL, (void *)&matrix_add_rows, (void *)m);
+    }
+
+  // Wait for threads to finish
+  for(i=0; i<m->mtx->a_rows; i++)
+    {
+      pthread_join(threads[i], NULL);
+    }
+
+  m->mtx->c_rows = m->mtx->a_rows;
+  m->mtx->c_columns = m->mtx->a_columns;
+}
+  
 int main(int argc, char **argv) {
+ // To store the matricies
+  matrix_t mtx;
+  char opt;
 
+  // Check input parameters
   validate_input(argc, argv);
 
-  matrix_t mtx;
   int ret = open_input_file(argv[1], &mtx);
   if(ret < 0)
     {
       printf("Error opening input file: %s\n", argv[1]);
       return -1;
     }
-
-  // Single thread for entire output
-  pthread_t thread_s;
-
-  char opt = *argv[2];
+  
+  opt = *argv[2];
   if('a' == opt || 'A' == opt)
     {
       // Check matrix dimensons
@@ -47,9 +86,13 @@ int main(int argc, char **argv) {
 	}
       // Addition
       // Get start time
-      pthread_create(&thread_s, NULL, (void *)&matrix_add_single, (void *)&mtx);
+      //pthread_create(&threads[1], NULL, (void *)&matrix_add_single, (void *)&mtx);
       // Wait for thread to finish
-      pthread_join(thread_s, NULL);
+      //pthread_join(threads[1], NULL);
+      // 1 thread per row
+      matrix_rows_t matrix_rows;
+      matrix_rows.mtx = &mtx;
+      matrix_add_rows_wrapper(&matrix_rows);
       // Get end time
     }
   else if('m' == opt || 'M' == opt)
@@ -62,9 +105,9 @@ int main(int argc, char **argv) {
 	}
       // Multiplication
       // Get start time
-      pthread_create(&thread_s, NULL, (void *)&matrix_multiply_single, (void *)&mtx);
+      pthread_create(&threads[1], NULL, (void *)&matrix_multiply_single, (void *)&mtx);
       // Wait for thread to finish
-      pthread_join(thread_s, NULL);
+      pthread_join(threads[1], NULL);
       // Get end time
     }
 	
@@ -165,11 +208,11 @@ int open_input_file(char *filename, matrix_t *m) {
   printf("Matrix A:\nNumber of rows: %d\nNumber of columns: %d\n", m->a_rows, m->a_columns);
 
   // Read matrix A from file	
-  char buf[BUF_SIZE];
+  char buf[SIZE_MAX];
   int i=1;
   // Add 2 to rows because the first row doesn't count
   // and 0-index
-  while( (fgets(buf, 128, fp_r) != NULL) && (i<(m->a_rows)+2) )
+  while( (fgets(buf, SIZE_MAX, fp_r) != NULL) && (i<(m->a_rows)+2) )
     {
       // Increment line count
       i++;
@@ -201,7 +244,7 @@ int open_input_file(char *filename, matrix_t *m) {
   i=1;
   // Add 2 to rows because the first row doesn't count
   // and 0-index
-  while( (fgets(buf, 128, fp_r) != NULL) && (i<(m->b_rows)+1) )
+  while( (fgets(buf, SIZE_MAX, fp_r) != NULL) && (i<(m->b_rows)+1) )
     {
       // Increment line count
       i++;
