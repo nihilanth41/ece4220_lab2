@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#include <sys/time.h>
 
 #define SIZE_MAX 64 
 
@@ -17,7 +18,7 @@ typedef struct matrix_t {
   int c_rows, c_columns;
 } matrix_t;
 
-typedef struct matrix_rows_t {
+typedef struct matrix_row_t {
   matrix_t *mtx;
   int current_row;
 } matrix_rows_t;
@@ -30,43 +31,15 @@ void matrix_add_single(void *);
 void matrix_add_rows(void *);
 void matrix_add_rows_wrapper(matrix_rows_t *);
 
-void matrix_add_rows(void *m) {
-  matrix_rows_t *matrix_rows = (matrix_rows_t *)m;
-  matrix_t *mtx = matrix_rows->mtx;
-  int i = matrix_rows->current_row;
-  int j;
-  pthread_mutex_lock(&lock);
-  for(j=1; j<=mtx->a_columns; j++)
-    {
-      mtx->matrix_c[i][j] = mtx->matrix_a[i][j] + mtx->matrix_b[i][j];
-    }
-  pthread_mutex_unlock(&lock);
-}
 
-void matrix_add_rows_wrapper(matrix_rows_t *m) {
-  // For each row of the output matrix, spin up a new thread to do the work
-  m->mtx->c_rows = m->mtx->a_rows;
-  m->mtx->c_columns = m->mtx->a_columns;
-
-  int i;
-  for(i=0; i<m->mtx->a_rows; i++)
-    {
-      m->current_row = i+1;
-      pthread_create(&threads[i], NULL, (void *)&matrix_add_rows, (void *)m);
-    }
-
-  // Wait for threads to finish
-  for(i=0; i<=m->mtx->a_rows; i++)
-    {
-      pthread_join(threads[i], NULL);
-    }
-  
-}
   
 int main(int argc, char **argv) {
  // To store the matricies
   matrix_t mtx;
   char opt;
+
+  // For measuring elapsed time
+  //struct timeval tv_Before, tv_After;
 
   if (pthread_mutex_init(&lock, NULL) != 0)
     {
@@ -76,7 +49,6 @@ int main(int argc, char **argv) {
 
   // Check input parameters
   validate_input(argc, argv);
-
   int ret = open_input_file(argv[1], &mtx);
   if(ret < 0)
     {
@@ -95,19 +67,35 @@ int main(int argc, char **argv) {
 	}
       // Addition
       // Get start time
-      int ret =pthread_create(&threads[1], NULL, (void *)&matrix_add_single, (void *)&mtx);
-      if(ret != 0)
-	{
-	  printf("Error creating thread\n");
-	  return -1;
-	}
-      // Wait for thread to finish
-      pthread_join(threads[1], NULL);
+      //gettimeofday(&tv_Before, NULL);
+      // 
+      //int ret =pthread_create(&threads[0], NULL, (void *)&matrix_add_single, (void *)&mtx);
+      //if(ret != 0)
+      //	{
+      //	  printf("Error creating thread\n");
+      //	  return -1;
+      //	}
+      //// Wait for thread to finish
+      //pthread_join(threads[0], NULL);
+
       // 1 thread per row
       matrix_rows_t matrix_rows;
       matrix_rows.mtx = &mtx;
-      matrix_add_rows_wrapper(&matrix_rows);
+      matrix_rows.mtx->c_rows = mtx.a_rows;
+      matrix_rows.mtx->c_columns = mtx.a_columns;
+      int i;
+      for(i=1; i<=mtx.a_rows; i++)
+	{
+		matrix_rows.current_row = i;
+		pthread_create(&threads[i], NULL, (void *)&matrix_add_rows, (void *)&matrix_rows);
+		pthread_join(threads[i], NULL);
+	}
       // Get end time
+      // Wait for threads to finish
+      //for(i=1; i<=mtx.a_rows; i++)
+      //	{
+      //	  pthread_join(threads[i], NULL);
+      //	}
     }
   else if('m' == opt || 'M' == opt)
     {
@@ -124,6 +112,9 @@ int main(int argc, char **argv) {
       pthread_join(threads[1], NULL);
       // Get end time
     }
+
+  
+  
 	
 
   // print result matrix
@@ -141,6 +132,25 @@ int main(int argc, char **argv) {
   return 0;
 
   pthread_mutex_destroy(&lock);
+}
+
+void matrix_add_rows(void *m) {
+  matrix_rows_t *matrix_rows = (matrix_rows_t *)m;
+  matrix_t *mtx = matrix_rows->mtx;
+  int i = matrix_rows->current_row;
+  int j;
+  pthread_mutex_lock(&lock);
+  for(j=1; j<=mtx->a_columns; j++)
+    {
+      mtx->matrix_c[i][j] = mtx->matrix_a[i][j] + mtx->matrix_b[i][j];
+    }
+  pthread_mutex_unlock(&lock);
+}
+
+void matrix_add_rows_wrapper(matrix_rows_t *m) {
+  // For each row of the output matrix, spin up a new thread to do the work
+  
+  
 }
 
 void matrix_add_single(void *m) {
@@ -240,7 +250,7 @@ int open_input_file(char *filename, matrix_t *m) {
 	{
 	  m->matrix_a[i-2][j+1] = atoi(tok);
 	  //printf("(%d, %d): %s\n", i-2, j+1, tok);
-	  printf("(%d, %d): %d\n", i-2, j+1, m->matrix_a[i-2][j+1]);
+	  //printf("(%d, %d): %d\n", i-2, j+1, m->matrix_a[i-2][j+1]);
 	  tok = strtok(NULL, " \n");
 	  j++;
 	}
@@ -272,7 +282,7 @@ int open_input_file(char *filename, matrix_t *m) {
 	{
 	  m->matrix_b[i-1][j+1] = atoi(tok);
 	  //printf("(%d, %d): %s\n", i-1, j+1, tok);
-	  printf("(%d, %d): %d\n", i-1, j+1, m->matrix_b[i-1][j+1]);
+	  //printf("(%d, %d): %d\n", i-1, j+1, m->matrix_b[i-1][j+1]);
 	  tok = strtok(NULL, " \n");
 	  j++;
 	}
