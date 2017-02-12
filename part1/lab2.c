@@ -35,14 +35,19 @@ void matrix_add_rows(void *m) {
   matrix_t *mtx = matrix_rows->mtx;
   int i = matrix_rows->current_row;
   int j;
+  pthread_mutex_lock(&lock);
   for(j=1; j<=mtx->a_columns; j++)
     {
       mtx->matrix_c[i][j] = mtx->matrix_a[i][j] + mtx->matrix_b[i][j];
     }
+  pthread_mutex_unlock(&lock);
 }
 
 void matrix_add_rows_wrapper(matrix_rows_t *m) {
   // For each row of the output matrix, spin up a new thread to do the work
+  m->mtx->c_rows = m->mtx->a_rows;
+  m->mtx->c_columns = m->mtx->a_columns;
+
   int i;
   for(i=0; i<m->mtx->a_rows; i++)
     {
@@ -51,19 +56,23 @@ void matrix_add_rows_wrapper(matrix_rows_t *m) {
     }
 
   // Wait for threads to finish
-  for(i=0; i<m->mtx->a_rows; i++)
+  for(i=0; i<=m->mtx->a_rows; i++)
     {
       pthread_join(threads[i], NULL);
     }
-
-  m->mtx->c_rows = m->mtx->a_rows;
-  m->mtx->c_columns = m->mtx->a_columns;
+  
 }
   
 int main(int argc, char **argv) {
  // To store the matricies
   matrix_t mtx;
   char opt;
+
+  if (pthread_mutex_init(&lock, NULL) != 0)
+    {
+      printf("Mutex initialization failed\n");
+      return -1;
+    }
 
   // Check input parameters
   validate_input(argc, argv);
@@ -86,9 +95,14 @@ int main(int argc, char **argv) {
 	}
       // Addition
       // Get start time
-      //pthread_create(&threads[1], NULL, (void *)&matrix_add_single, (void *)&mtx);
+      int ret =pthread_create(&threads[1], NULL, (void *)&matrix_add_single, (void *)&mtx);
+      if(ret != 0)
+	{
+	  printf("Error creating thread\n");
+	  return -1;
+	}
       // Wait for thread to finish
-      //pthread_join(threads[1], NULL);
+      pthread_join(threads[1], NULL);
       // 1 thread per row
       matrix_rows_t matrix_rows;
       matrix_rows.mtx = &mtx;
@@ -125,6 +139,8 @@ int main(int argc, char **argv) {
     }
 
   return 0;
+
+  pthread_mutex_destroy(&lock);
 }
 
 void matrix_add_single(void *m) {
