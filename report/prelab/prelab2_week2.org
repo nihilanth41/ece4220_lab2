@@ -1,0 +1,41 @@
+#+AUTHOR: Zachary Rump
+#+DATE: 2017-02-13
+#+TITLE: ECE 4220
+#+OPTIONS: toc:nil H:4 num:0 ^:nil
+#+LATEX_HEADER: \usepackage[margin=0.5in]{geometry}
+\overfullrule=2cm
+* Prelab 2
+** Week 2
+#+BEGIN_SRC C
+// Setup real time task in userspace
+// Load kernel modules: rtai_hal, rtai_lxrt
+#include <stdlib.h>
+#include <stdio.h>
+#include <rtai.h>
+#include <rtai_lxrt.h>
+#include <rtai_sched.h>
+
+#define STACK_SIZE 4000
+
+void func_example(void *arg) {
+    printf("This is a real time task?\n");
+}
+
+int main(int argc, char **argv) {
+    
+    RT_TASK thread;
+    rt_task_init(&thread, func_example, 0, STACK_SIZE, 0, 0, 0)
+    rt_set_oneshot_mode();
+    start_rt_timer(0);
+
+    return 0;
+}
+#+END_SRC
+
+*** References
+
+[[https://code.ua.pt/attachments/download/2172/rtai_tutorial.pdf]]
+
+[[http://download.gna.org/rtai/documentation/kilauea/html/group__tasks.html]]
+
+[[https://www.rtai.org/userfiles/documentation/documents/RTAI_User_Manual_34_03.pdf]]
