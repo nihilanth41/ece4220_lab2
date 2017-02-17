@@ -157,7 +157,7 @@ int main(int argc, char **argv) {
 	      pthread_create(&threads[i][j], NULL, (void *)&matrix_add_elements, (void *)&matrix_elements[i][j]);
 	    }
 	}
-     for(i=1; i<=mtx.a_rows; i++)
+      for(i=1; i<=mtx.a_rows; i++)
 	{
 	  for(j=1; j<=mtx.a_columns; j++)
 	    {
@@ -188,6 +188,10 @@ int main(int argc, char **argv) {
 	  printf("Invalid dimensions for multiplication\n");
 	  return -1;
 	}
+
+      mtx.c_rows = mtx.a_rows;
+      mtx.c_columns = mtx.b_columns;
+
       // Multiplication
       // Get start time
       gettimeofday(&tv_before, NULL);
@@ -212,12 +216,12 @@ int main(int argc, char **argv) {
       printf("Elapsed time with one thread: %ld microseconds\n", tv_difference_usec);
 
       // One thread per row of output matrix
+      // Get start time
+      gettimeofday(&tv_before, NULL);
       //For each row in matrix A
       for(i=1; i<=mtx.a_rows; i++)
 	{
 	  matrix_rows[i].mtx = &mtx;
-	  matrix_rows[i].mtx->c_rows = mtx.a_rows;
-	  matrix_rows[i].mtx->c_columns = mtx.a_columns;
 	  matrix_rows[i].current_row = i;
 	  pthread_create(&threads[i][0], NULL, (void *)&matrix_multiply_rows, (void *)&matrix_rows[i]);
 	}
@@ -226,6 +230,8 @@ int main(int argc, char **argv) {
 	{
 	  pthread_join(threads[i][0], NULL);
 	}
+      // Get end time
+      gettimeofday(&tv_after, NULL);
       tv_difference_usec = tv_after.tv_usec - tv_before.tv_usec;
       printf("\nResults of multiplication with %d threads: \n", mtx.c_rows);
       for(i=1; i<=mtx.c_rows; i++)
@@ -279,8 +285,6 @@ void matrix_multiply_single(void *m) {
       return;
     }
   matrix_t *mtx = (matrix_t *)m;
-  mtx->c_rows = mtx->a_rows;
-  mtx->c_columns = mtx->b_columns;
   int i,k,l;
   int sum_tmp=0;
   // For each row in Matrix A
