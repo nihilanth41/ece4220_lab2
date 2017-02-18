@@ -35,9 +35,28 @@ void validate_input(int argc, char **argv);
 int open_input_file(char *filename, matrix_t *);
 void matrix_multiply_single(void *);
 void matrix_multiply_rows(void *);
+void matrix_multiply_elements(void *);
 void matrix_add_single(void *);
 void matrix_add_rows(void *);
 void matrix_add_elements(void *);
+void print_matrix_c(matrix_t *m);
+
+void print_matrix_c(matrix_t *mtx) {
+  if(NULL == mtx)
+    {
+      return;
+    }
+  int i,j;
+  for(i=1; i<=mtx->c_rows; i++)
+    {
+      // Column
+      for(j=1; j<=mtx->c_columns; j++)
+	{
+	  printf("%d ", mtx->matrix_c[i][j]);
+	}
+      printf("\n");
+    }
+}
 
 void matrix_add_elements(void *arg) {
   if(NULL == arg)
@@ -60,11 +79,15 @@ int main(int argc, char **argv) {
   // To store the matricies
   matrix_t mtx;
   matrix_rows_t matrix_rows[SIZE_MAX];
+  matrix_elem_t matrix_elements[SIZE_MAX][SIZE_MAX];
   char opt;
 
   // For measuring elapsed time
   struct timeval tv_before, tv_after;
   long int tv_difference_usec;
+
+  // iterators
+  int i,j,l;
 
   // Check input parameters
   validate_input(argc, argv);
@@ -76,6 +99,7 @@ int main(int argc, char **argv) {
     }
 
   opt = *argv[2];
+  // Addition
   if('a' == opt || 'A' == opt)
     {
       // Check matrix dimensons
@@ -84,28 +108,18 @@ int main(int argc, char **argv) {
 	  printf("Invalid dimensions for addition\n");
 	  return -1;
 	}
-      // Addition
+      
       // Get start time
       gettimeofday(&tv_before, NULL);
       // Single thread addition
       pthread_create(&threads[0][0], NULL, (void *)&matrix_add_single, (void *)&mtx);
       pthread_join(threads[0][0], NULL);
-
       // Get end time
       gettimeofday(&tv_after, NULL);
       tv_difference_usec = tv_after.tv_usec - tv_before.tv_usec;
-      //// Print results of single thread addition
+      // Print results of single thread addition
       printf("\nResults of addition with one thread: \n");
-      int i,j;
-      for(i=1; i<=mtx.c_rows; i++)
-	{
-	  // Column
-	  for(j=1; j<=mtx.c_columns; j++)
-	    {
-	      printf("%d ", mtx.matrix_c[i][j]);
-	    }
-	  printf("\n");
-	}
+      print_matrix_c(&mtx);
       printf("Elapsed time with one thread: %ld microseconds\n", tv_difference_usec);
 
       // 1 thread per row
@@ -119,30 +133,19 @@ int main(int argc, char **argv) {
 	  matrix_rows[i].current_row = i;
 	  pthread_create(&threads[i][0], NULL, (void *)&matrix_add_rows, (void *)&matrix_rows[i]);
 	}
-      //Get end time
       //Wait for threads to finish
       for(i=1; i<=mtx.a_rows; i++)
 	{
 	  pthread_join(threads[i][0], NULL);
 	}
-
       // Get end time
       gettimeofday(&tv_after, NULL);
       tv_difference_usec = tv_after.tv_usec - tv_before.tv_usec;
       printf("\nResults of addition with %d threads: \n", mtx.c_rows);
-      for(i=1; i<=mtx.c_rows; i++)
-	{
-	  // Column
-	  for(j=1; j<=mtx.c_columns; j++)
-	    {
-	      printf("%d ", mtx.matrix_c[i][j]);
-	    }
-	  printf("\n");
-	}
+      print_matrix_c(&mtx);
       printf("Elapsed time with %d threads: %ld microseconds\n", mtx.c_rows, tv_difference_usec);
 
-      // 1 Thread per element
-      matrix_elem_t matrix_elements[SIZE_MAX][SIZE_MAX];
+      // 1 thread per element
       // Get start time
       gettimeofday(&tv_before, NULL);
       for(i=1; i<=mtx.a_rows; i++)
@@ -167,52 +170,35 @@ int main(int argc, char **argv) {
       // Get end time
       gettimeofday(&tv_after, NULL);
       tv_difference_usec = tv_after.tv_usec - tv_before.tv_usec;
-      //// Print results of single thread addition
       printf("\nResults of addition with %d threads: \n", mtx.c_rows*mtx.c_columns);
-      for(i=1; i<=mtx.c_rows; i++)
-	{
-	  // Column
-	  for(j=1; j<=mtx.c_columns; j++)
-	    {
-	      printf("%d ", mtx.matrix_c[i][j]);
-	    }
-	  printf("\n");
-	}
+      print_matrix_c(&mtx);
       printf("Elapsed time with %d threads: %ld microseconds\n", mtx.c_rows*mtx.c_columns, tv_difference_usec);
     }
+    // Multiplication
   else if('m' == opt || 'M' == opt)
     {
-
+      // Check dimensions for multiplication
       if(mtx.a_columns != mtx.b_rows)
 	{
 	  printf("Invalid dimensions for multiplication\n");
 	  return -1;
 	}
-
+      // Assign dimensions of output matrix
       mtx.c_rows = mtx.a_rows;
       mtx.c_columns = mtx.b_columns;
 
-      // Multiplication
+      // Multiplication with one thread
       // Get start time
       gettimeofday(&tv_before, NULL);
-      // Multiplication with one thread
       pthread_create(&threads[0][0], NULL, (void *)&matrix_multiply_single, (void *)&mtx);
       // Wait for thread to finish
       pthread_join(threads[0][0], NULL);
       // Get end time
       gettimeofday(&tv_after, NULL);
       tv_difference_usec = tv_after.tv_usec - tv_before.tv_usec;
-      //// Print results of single thread multiplication
+      // Print results of single thread multiplication
       printf("\nResults of multiplication with one thread: \n");
-      int i,j;
-      for(i=1; i<=mtx.c_rows; i++)
-	{
-	  for(j=1; j<=mtx.c_columns; j++)
-	    {
-	      printf("%d ", mtx.matrix_c[i][j]);
-	    }
-	  printf("\n");
-	}
+      print_matrix_c(&mtx);
       printf("Elapsed time with one thread: %ld microseconds\n", tv_difference_usec);
 
       // One thread per row of output matrix
@@ -234,20 +220,65 @@ int main(int argc, char **argv) {
       gettimeofday(&tv_after, NULL);
       tv_difference_usec = tv_after.tv_usec - tv_before.tv_usec;
       printf("\nResults of multiplication with %d threads: \n", mtx.c_rows);
-      for(i=1; i<=mtx.c_rows; i++)
-	{
-	  // Column
-	  for(j=1; j<=mtx.c_columns; j++)
-	    {
-	      printf("%d ", mtx.matrix_c[i][j]);
-	    }
-	  printf("\n");
-	}
+      print_matrix_c(&mtx);
       printf("Elapsed time with %d threads: %ld microseconds\n", mtx.c_rows, tv_difference_usec);
     }
 
+    // One thread per element of output matrix
+    // Get start time
+    gettimeofday(&tv_before, NULL);
+    // For each row in Matrix A
+    for(i=1; i<=mtx.a_rows; i++)
+      {
+	// For each column in matrix B
+	for(l=1; l<=mtx.b_columns; l++)
+	  {
+	    matrix_elements[i][l].mtx = &mtx;
+	    matrix_elements[i][l].current_row = i;
+	    matrix_elements[i][l].current_col = l;
+	    pthread_create(&threads[i][l], NULL, (void *)&matrix_multiply_elements, (void *)&matrix_elements[i][l]);
+	  }
+      }
+    // wait for threads to finish
+    for(i=1; i<=mtx.a_rows; i++)
+      {
+	// For each column in matrix B
+	for(l=1; l<=mtx.b_columns; l++)
+	  {
+	    pthread_join(threads[i][l], NULL);
+	  }
+      }
+      // Get end time
+      gettimeofday(&tv_after, NULL);
+      tv_difference_usec = tv_after.tv_usec - tv_before.tv_usec;
+      printf("\nResults of multiplication with %d threads: \n", mtx.c_rows*mtx.c_columns);
+      print_matrix_c(&mtx);
+      printf("Elapsed time with %d threads: %ld microseconds\n", mtx.c_rows*mtx.c_columns, tv_difference_usec);
 
-  return EXIT_SUCCESS;
+
+      return EXIT_SUCCESS;
+}
+
+void matrix_multiply_elements(void *args) {
+  if(NULL == args)
+    {
+      return;
+    }
+  matrix_elem_t *matrix_elements = (matrix_elem_t *)args;
+  if(NULL == matrix_elements->mtx)
+    {
+      return;
+    }
+  matrix_t *mtx = matrix_elements->mtx;
+  int i = matrix_elements->current_row;
+  int l = matrix_elements->current_col;
+  int k;
+  int sum_tmp = 0;
+  for(k=1; k<=mtx->b_rows; k++)
+    {
+      sum_tmp += ( (mtx->matrix_a[i][k]) * (mtx->matrix_b[k][l]) );
+    }
+  mtx->matrix_c[i][l] = sum_tmp;
 }
 
 void matrix_multiply_rows(void *args) {
