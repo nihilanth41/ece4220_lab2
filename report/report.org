@@ -1,0 +1,79 @@
+#+AUTHOR: Zachary Rump
+#+DATE: 2017-02-17
+#+TITLE: ECE 4220
+#+OPTIONS: toc:nil H:4 num:0
+#+LATEX_HEADER: \usepackage[margin=0.5in]{geometry}
+\overfullrule=2cm
+* Lab 2 Report
+** Objectives
+The main objectives for Lab 2 were to learn about the advantages and 
+disadvantages of multithreaded programs, and learn about real time tasks.
+*** Lab Description
+The specific objectives for Lab 2 were:
+1. Implement matrix operations with different numbers of threads to better understand thread performance.
+2. Set up a real time task in userspace using the RTAI library and learn how to synchronize threads.
+** Implementation
+*** Part 1
+The program for Part 1 of Lab 2 is used as follows:
+#+BEGIN_SRC SHELL
+./lab2.bin </path/to/input_file> <[Aa]|[Mm]> 
+#+END_SRC
+It takes two input parameters:
+1. Path to the plain text file containing the matricies.
+2. One of "A" or "M" (case-insensitive) to indicate whether the matricies should be added together or multiplied together.
+In either case, the program will read the matricies from the file and perform
+the operation three times with a different number of threads each time.  Each
+time the opeartion(s) are performed, the performance is measured by determining
+the elapsed time.  The resulting output matrix and elapsed time are printed to
+the standard output.
+
+For the sake of simplicity, fixed size arrays (i.e. allocated on the stack) are
+used for the threads, matricies, and parameter structs for the different
+operations.  Each type of operation (one thread, one thread per row, and one
+thread per element) has a different argument struct and C-function that are
+passed to pthread_create().
+*** Part 2
+*** Flowcharts
+#+CAPTION: Flowchart for Part One of Lab Two. 
+#+NAME: flowchart:p1
+[[./images/flowchart_pt1.png]]`
+
+#+CAPTION: Flowchart for the Real Time Tasks portion of Lab 2.
+#+NAME: flowchart:p2
+[[./images/flowchart_pt1.png]]`
+** Experiments and Results
+*** Part 1 
+Part one of the lab was tested primarily by computing the output matrix over and
+over again and making sure the results were consistent in each case.  Another
+method that was used for testing was to change the input to something very
+simple just to verify the output is correct. For example, multiplication with
+the identity matrix.  Additionally, the program was tested with matricies of
+invalid sizes for multiplication to make sure it would exit gracefully. Lastly,
+the results were verified using a calculator when necessary.
+*** Part 2 
+** Discussion
+*** Post Lab Questions:
+**** Table of Results
+| Case                                              | Time for Addition | Time for Multiplication |
+|---------------------------------------------------+-------------------+-------------------------|
+| One thread to compute the entire output matrix.   | 567 \mu{}s        | 522 \mu{}s            |
+| One thread for each element of the output matrix. | 2444 \mu{}s       | 164 \mu{}s          |
+| One thread for each element of the output matrix. | 18822 \mu{}s      | 2203 \mu{}s         |
+
+**** What is the best number of threads for doing matrix addition?
+
+**** What is the best number of threads for doing matrix multiplication?
+** Code  
+*** Part 1
+#+NAME: Part 1
+#+ATTR_LATEX: :foat nil
+#+BEGIN_SRC C
+
+#+END_SRC
+*** Part 2
+#+NAME: Part 2
+#+ATTR_LATEX: :foat nil
+#+BEGIN_SRC C
+ 
+#+END_SRC   
+    
