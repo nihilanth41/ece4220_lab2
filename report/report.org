@@ -23,7 +23,7 @@ It takes two input parameters:
 2. One of "A" or "M" (case-insensitive) to indicate whether the matricies should be added together or multiplied together.
 In either case, the program will read the matricies from the file and perform
 the operation three times with a different number of threads each time.  Each
-time the opeartion(s) are performed, the performance is measured by determining
+time the opertion(s) are performed, the performance is measured by determining
 the elapsed time.  The resulting output matrix and elapsed time are printed to
 the standard output.
 
@@ -40,7 +40,7 @@ passed to pthread_create().
 
 #+CAPTION: Flowchart for the Real Time Tasks portion of Lab 2.
 #+NAME: flowchart:p2
-[[./images/flowchart_pt1.png]]`
+[[./images/flowchart_pt2.png]]`
 ** Experiments and Results
 *** Part 1 
 Part one of the lab was tested primarily by computing the output matrix over and
