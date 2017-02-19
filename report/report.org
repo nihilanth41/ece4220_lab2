@@ -6,7 +6,7 @@
 \overfullrule=2cm
 * Lab 2 Report
 ** Objectives
-The main objectives for Lab 2 were to learn about the advantages and 
+The main objectives for Lab 2 were to learn about the advantages and
 disadvantages of multithreaded programs, and learn about real time tasks.
 *** Lab Description
 The specific objectives for Lab 2 were:
@@ -16,7 +16,7 @@ The specific objectives for Lab 2 were:
 *** Part 1
 The program for Part 1 of Lab 2 is used as follows:
 #+BEGIN_SRC SHELL
-./lab2.bin </path/to/input_file> <[Aa]|[Mm]> 
+./lab2.bin </path/to/input_file> <[Aa]|[Mm]>
 #+END_SRC
 It takes two input parameters:
 1. Path to the plain text file containing the matricies.
@@ -44,8 +44,8 @@ passed to pthread_create().
 ** Experiments and Results
 *** Part 1 
 Part one of the lab was tested primarily by computing the output matrix over and
-over again and making sure the results were consistent in each case.  
-Another method that was used for testing was to change the input to something very
+over again and making sure the results were consistent in each case.  Another
+method that was used for testing was to change the input to something very
 simple just to verify the output is correct. For example, multiplication with
 the identity matrix. Additionally, the program was tested with matricies of
 invalid sizes for multiplication to make sure it would exit gracefully. Lastly,
@@ -62,10 +62,10 @@ the results were verified using a calculator when necessary.
 
 **** What is the best number of threads for doing matrix addition?
 Based on the 20x20 matrix that was used for testing, the best number of threads
-for matrix addition appears to be just one thread.
-This indicates that the overhead associated with creating the threads and thread
-switching is significantly greater than the amount of time it takes to actually perform
-the addition.
+for matrix addition appears to be just one thread.  This indicates that the
+overhead associated with creating the threads and thread switching is
+significantly greater than the amount of time it takes to actually perform the
+addition.
 **** What is the best number of threads for doing matrix multiplication?
 
 ** Code  
