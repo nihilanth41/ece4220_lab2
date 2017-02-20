@@ -23,7 +23,7 @@ It takes two input parameters:
 2. One of "A" or "M" (case-insensitive) to indicate whether the matricies should be added together or multiplied together.
 In either case, the program will read the matricies from the file and perform
 the operation three times with a different number of threads each time.  Each
-time the opertion(s) are performed, the performance is measured by determining
+time the operation(s) are performed, the performance is measured by determining
 the elapsed time.  The resulting output matrix and elapsed time are printed to
 the standard output.
 
@@ -69,15 +69,15 @@ significantly greater than the amount of time it takes to actually perform the
 addition.
 **** What is the best number of threads for doing matrix multiplication?
 Based on the matricies used for testing, the best number of threads seems to be
-one thread per row of the output matrix.  Most of the time one thread per row was significantly
-faster than the one thread total or one thead per element cases. In the worst case the elapsed time for one thread per row
-was about the same as one thread per element.
-
-This result is expected because with matrix multiplication, each element of the
-output matrix requires some iteration over the input.  For this reason,
-multiplication benefits more from a modest number of threads than addition does.
-It seems plausible also that very large matricies might benefit more from the 1
-thread per element approach, because of the iteration involved.
+one thread per row of the output matrix.  Most of the time one thread per row
+was significantly faster than the one thread total or one thead per element
+cases. In the worst case the elapsed time for one thread per row was about the
+same as one thread per element.  This result is expected because with matrix
+multiplication, each element of the output matrix requires some iteration over
+the input.  For this reason, multiplication benefits more from a modest number
+of threads than addition does.  It seems plausible also that very large
+matricies might benefit more from the 1 thread per element approach, because of
+the iteration involved.
 ** Code  
 *** Part 1
 #+NAME: Part 1
