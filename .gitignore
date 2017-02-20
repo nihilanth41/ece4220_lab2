@@ -1,2 +1,5 @@
 /prelab2.pdf
 /prelab2.tex
+*.swp
+*.swo
+*.bin

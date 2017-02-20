@@ -32,11 +32,11 @@ int main(int argc, char **argv) {
 
   // 1ms timer period 
   // Only call start_rt_timer once
-  timer_period = start_rt_timer(nano2count(1000000));
+  timer_period = start_rt_timer(nano2count(10000000));
 
   // Create threads
-  pthread_create(&t1, NULL, (void *)read_input_file, (void *)args1);
-  pthread_create(&t2, NULL, (void *)read_input_file, (void *)args2);
+  pthread_create(&t1, NULL, (void *)read_input_file, (void *)&args1);
+  pthread_create(&t2, NULL, (void *)read_input_file, (void *)&args2);
   pthread_create(&t3, NULL, (void *)read_from_buffer, NULL);
 
   // Wait for Threads 1 and 2 to complete. (Both reach EOF)
@@ -51,14 +51,14 @@ int main(int argc, char **argv) {
 
 // Input params: args_t *args_st
 // Returns: nothing
-void read_input_file(void *arg_st) {
+void read_input_file(void *args_st) {
   // Validate parameters
-  if(NULL == arg_st)
+  if(NULL == args_st)
     {
       return;
     }
   args_t *args = (args_t *)args_st;
-  if(NULL == args->filename || args->thread_id != 1 || args->thread_id != 2)
+  if(NULL == args->filename)
     {
       return;
     }
@@ -101,7 +101,7 @@ void read_input_file(void *arg_st) {
       }
     }
 
-    while( (fgets(buf, SIZE_MAX, fp_r) != NULL) )
+    while( (fgets(buf, BUF_SIZE, fp_r) != NULL) )
     {
 	// Put a line from the file in the buffer and wait to be scheduled again
 	rt_task_wait_period();
@@ -110,7 +110,7 @@ void read_input_file(void *arg_st) {
 }
 
 
-void read_from_buffer(void *) {
+void read_from_buffer(void *args) {
   // Task 3 / Thread 3
   rt3 = rt_task_init(nam2num("rt3"), 0, STACK_SIZE, MSG_SIZE);
   // Offset task 3 by 1 timer_period (1st schedule should be immediately after task_1 1st deadline)
