@@ -1,7 +1,7 @@
 #+AUTHOR: Zachary Rump
 #+DATE: 2017-02-17
 #+TITLE: ECE 4220
-#+OPTIONS: toc:nil H:4 num:0
+#+OPTIONS: toc:nil H:4 num:0 ^:nil
 #+LATEX_HEADER: \usepackage[margin=0.5in]{geometry}
 \overfullrule=2cm
 * Lab 2 Report
@@ -45,6 +45,7 @@ The end result is that the three threads work in unison to print a coherent mess
 
 Flowchart for Part One of Lab Two. 
 
+
 [[./images/flowchart_pt2.png]]`
 
 Flowchart for the Real Time Tasks portion of Lab 2.
@@ -73,7 +74,13 @@ before the current row was incremented in main(). This problem was resolved by
 creating an array of argument structs to pass to each thread. After that the
 rest of part 1 was pretty straightforward.
 *** Part 2
-
+The main difficulties encountered in week two had to do with understanding how
+to use the rtai functions in conjunction with pthreads. Initially I thought that
+the RT_TASK was used in a similar way to pthreads. The TA pointed out that the
+threads are created first, then the RTAI functions are called inside each
+thread. The period and offset for each task was determined by drawing a timing diagram.
+The initial rt_timer period of 1ms ended up being too fast to get consistent results. 
+Changing the timer period to 10ms produced consistent results when printing to stdout. 
 *** Post Lab Questions:
 **** Table of Results
 #+CAPTION: Note that these numbers were from a dual-core system.
