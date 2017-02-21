@@ -83,13 +83,11 @@ The initial rt_timer period of 1ms ended up being too fast to get consistent res
 Changing the timer period to 10ms produced consistent results when printing to stdout. 
 *** Post Lab Questions:
 **** Table of Results
-#+CAPTION: Note that these numbers were from a dual-core system.
 | Case                                              | Time for Addition | Time for Multiplication |
 |---------------------------------------------------+-------------------+-------------------------|
 | One thread to compute the entire output matrix.   | 567 \mu{}s        | 522 \mu{}s              |
 | One thread for each element of the output matrix. | 2444 \mu{}s       | 164 \mu{}s              |
 | One thread for each element of the output matrix. | 18822 \mu{}s      | 2203 \mu{}s             |
-
 **** What is the best number of threads for doing matrix addition?
 Based on the 20x20 matrix that was used for testing, the best number of threads
 for matrix addition appears to be just one thread.  This indicates that the
